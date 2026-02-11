@@ -15,8 +15,19 @@ The compiled executable is:
 Build artifacts (objects and static libs) are under
 build_ifx_byterecl_wdopux_hspfext/{obj,lib,bin}.
 
+## Self-contained static executables
+- build_ifx_byterecl_wdopux_hspfext/bin/hspf12_5_static
+  - Intel runtime is statically linked; still uses system glibc.
+- build_ifx_byterecl_wdopux_hspfext/bin/hspf12_5_static_full
+  - Fully static (ldd reports "not a dynamic executable").
+
 ## Run example
 ```
 source /opt/intel/oneapi/setvars.sh
 ./build_ifx_byterecl_wdopux_hspfext/bin/hspf12_5 /path/to/your.uci
+```
+
+Fully static run (no oneAPI runtime required):
+```
+./build_ifx_byterecl_wdopux_hspfext/bin/hspf12_5_static_full /path/to/your.uci
 ```
