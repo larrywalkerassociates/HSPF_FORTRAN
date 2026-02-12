@@ -57,7 +57,7 @@ C
 C     CALL CHANGEDIRQQ('e:\test\hspf\Salado\intel12.3detail10')
 C     CALL CHANGEDIRQQ('e:\F90APPS\HSPF12.3INTEL\TEST')
       CALL CHANGEDIRQQ('C:\FORTRAN\test\hspf\standard\CurrentIntel')
-      OPEN (UNIT=99,FILE='error.fil')
+      OPEN (UNIT=99,FILE='ERROR.FIL')
 C
 C     initialize wdm file common block
       CALL WDBFIN
