@@ -269,13 +269,18 @@ C     + + + COMMON BLOCKS + + +
 C
 C     + + + LOCAL VARIABLES + + +
       INTEGER   I, J
+      CHARACTER*256 STR
 C
 C     + + + EXTERNALS + +
-      EXTERNAL   WDFLNU
+      EXTERNAL   WDFLNU, LOG_MSG
 C
 C     + + + END SPECIFICATIONS + + +
 C
       RETCOD= 0
+C     enable ERROR.FIL logging if available
+      CALL LOG_MSG('WRITE')
+      WRITE(STR,2000) WDMSFL
+      CALL LOG_MSG(STR)
 C
 C     WRITE(99,*,ERR=10) 'WDFLCL:entry',WDMSFL,
 C    #            ' count',WDMCNT,
@@ -319,12 +324,17 @@ C         force exit from loop
         END IF
       END DO
 C
+      WRITE(STR,2001) WDMSFL, RETCOD
+      CALL LOG_MSG(STR)
+C
 C     WRITE(99,*,ERR=40) 'WDFLCL:exit:',WDMSFL,
 C    #            ' count',WDMCNT,
 C    #            ' open:',(WDMOPN(I),I=1,WDMCNT)
 C40   CONTINUE
 C
       RETURN
+ 2000 FORMAT('HASS_ENT:F90_WDFLCL:entry:WDMSFL:',I11)
+ 2001 FORMAT('HASS_ENT:F90_WDFLCL:close:WDMSFL:RETCOD:',I11,1X,I11)
       END
 C
 C

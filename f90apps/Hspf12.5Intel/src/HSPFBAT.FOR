@@ -57,7 +57,7 @@ C
 C     CALL CHANGEDIRQQ('e:\test\hspf\Salado\intel12.3detail10')
 C     CALL CHANGEDIRQQ('e:\F90APPS\HSPF12.3INTEL\TEST')
       CALL CHANGEDIRQQ('C:\FORTRAN\test\hspf\standard\CurrentIntel')
-      OPEN (UNIT=99,FILE='ERROR.FIL')
+      OPEN (UNIT=98,FILE='error.fil')
 C
 C     initialize wdm file common block
       CALL WDBFIN
@@ -191,7 +191,7 @@ C
 C     when end?
       CALL CPU_TIME(TIMEE)
 C     include something about exe and hspfmsg.wdm versions too?      
-      WRITE(99,'(3f10.3,1x,a)') TIMEE-TIMES, TIMES, TIMEE, TRIM(FILNAM)
+      WRITE(98,'(3f10.3,1x,a)') TIMEE-TIMES, TIMES, TIMEE, TRIM(FILNAM)
 C     CALL TSTUF('Done',1.0)
 C      uncomment these lines for run times on f90
 C      CALL DATE_AND_TIME(VALUES=EDATM)
