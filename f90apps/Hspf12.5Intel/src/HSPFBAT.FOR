@@ -11,7 +11,7 @@ C     + + + PARAMETERS + + +
       INCLUDE 'pmesfl.inc'
 C
 C     + + + LOCAL VARIABLES + + +
-      INTEGER      FILES(15),I,I0,I1,USRFL,MESSU,
+      INTEGER      FILES(15),I,I0,I1,USRFL,MESSU,MESSF,INQ,
      $             RETCOD,RCL,SCLU,SGRP,IOPT,LEN,ICOMMA,ISPACE
 C      INTEGER      SDATM(8),EDATM(8),IDATM(8),DSEC
       REAL         TIMES, TIMEE
@@ -22,15 +22,15 @@ C      INTEGER      SDATM(8),EDATM(8),IDATM(8),DSEC
       CHARACTER*1  COMMA,SPACE
 C
 C     + + + FUNCTIONS + + +
-      INTEGER      LENSTR,STRFND
+      INTEGER      LENSTR,STRFND,F90_INQNAM
 C
 C     + + + INTRINSICS + + +
       INTRINSIC    MIN
 C
 C     + + + EXTERNALS + + +
       EXTERNAL     WDBFIN, XGTARG, FILOPN, FILBLK, HSPF, HDMESI, SCCLAL
-      EXTERNAL     ZIPI, DSSCLO, UCIINP, HDMESC, HDMEST, WDBOPN, LENSTR
-      EXTERNAL     STRFND
+      EXTERNAL     ZIPI, DSSCLO, UCIINP, HDMESC, HDMEST, F90_WDBOPNR,
+     $             LENSTR, STRFND, LOG_MSG
 C
 C     + + + INPUT FORMATS + + +
  1000 FORMAT (A64)
@@ -68,6 +68,8 @@ C     get command line - this is a system-specific routine
      M            (CLINE)
 C     when start?
       CALL CPU_TIME(TIMES)
+C     enable ERROR.FIL logging for HASS_ENT wrapper
+      CALL LOG_MSG('WRITE')
 C
 C     parse command line to get input filename - must be first argument
       I= 64
@@ -85,16 +87,19 @@ C
 C     open message file
       I = 1
       INCLUDE 'fhsmes.inc'
-      CALL WDBOPN (MESSFL,HMSNAM,I,
-     O             RETCOD)
+      MESSF = MESSFL
+      INQ = F90_INQNAM(HMSNAM)
+      CALL F90_WDBOPNR (I,HMSNAM,MESSF,
+     O                  RETCOD)
       IF (RETCOD.NE.0) THEN
 C       problem with opening message file, prompt for other file name
-        WRITE (*,*) 'Problem:',RETCOD,MESSFL,I,' with ',HMSNAM
+        WRITE (*,*) 'Problem:',RETCOD,MESSF,I,' with ',HMSNAM
         WRITE (*,*)
         WRITE (*,*) 'NAME OF WDM MESSAGE FILE: '
         READ (*,1000) FNAME
-        CALL WDBOPN (MESSFL,FNAME,I,
-     O               RETCOD)
+        INQ = F90_INQNAM(FNAME)
+        CALL F90_WDBOPNR (I,FNAME,MESSF,
+     O                    RETCOD)
       END IF
 C
       IF (RETCOD.EQ.0) THEN
@@ -104,7 +109,7 @@ cthj        CALL SCCLAL
         IOPT = 1
         SCLU = 201
         SGRP = 50
-        CALL HDMESC (IOPT,MESSFL,SCLU,SGRP,FILNAM)
+        CALL HDMESC (IOPT,MESSF,SCLU,SGRP,FILNAM)
 C       open input file
         USRFL= 7
         ACC  = 'SEQUENTIAL'
@@ -121,7 +126,7 @@ C         initialize files to closed
           I0= 0
           CALL ZIPI (I,I0,
      O               FILES)
-          FILES(15) = MESSFL
+          FILES(15) = MESSF
           CALL FILBLK
      I                (USRFL,
      M                 FILES,
@@ -134,10 +139,10 @@ C           file block processed without error - beginning message
             CALL SCCLAL
             SGRP = 51
             IOPT = 1
-            CALL HDMEST (IOPT,MESSFL,SCLU,SGRP)
+            CALL HDMEST (IOPT,MESSF,SCLU,SGRP)
 C           read users uci file
             MESSU  = FILES(1)
-            CALL UCIINP (USRFL,MESSFL,MESSU)
+            CALL UCIINP (USRFL,MESSF,MESSU)
 C           dummy to match hasent output
             WRITE(MESSU,'(" FOUND RUN ")')
             WRITE(MESSU,'(" FOUND END RUN ")')
@@ -154,34 +159,34 @@ C           clear screen
             IF (RETCOD .EQ. 0) THEN
               SGRP = 52
               IOPT = 1
-              CALL HDMEST (IOPT,MESSFL,SCLU,SGRP)
+              CALL HDMEST (IOPT,MESSF,SCLU,SGRP)
             ELSE IF (RETCOD .EQ. 1) THEN
 C             runfg=0 in global block - must stop
               SGRP = 53
               IOPT = 1
-              CALL HDMEST (IOPT,MESSFL,SCLU,SGRP)
+              CALL HDMEST (IOPT,MESSF,SCLU,SGRP)
             ELSE IF (RETCOD .EQ. 2) THEN
 C             errors in input file -  must stop
               SGRP = 54
               IOPT = 1
-              CALL HDMEST (IOPT,MESSFL,SCLU,SGRP)
+              CALL HDMEST (IOPT,MESSF,SCLU,SGRP)
             ELSE IF (RETCOD .EQ. 3) THEN
 C             no run keyword found in input file
               SGRP = 55
               IOPT = 1
-              CALL HDMEST (IOPT,MESSFL,SCLU,SGRP)
+              CALL HDMEST (IOPT,MESSF,SCLU,SGRP)
             END IF
           ELSE
 C           error in files block
             SGRP = 56
             IOPT = 1
-            CALL HDMESI (IOPT,MESSFL,SCLU,SGRP,RETCOD)
+            CALL HDMESI (IOPT,MESSF,SCLU,SGRP,RETCOD)
           END IF
         ELSE
 C         error opening uci file
           SGRP = 57
           IOPT = 1
-          CALL HDMESI (IOPT,MESSFL,SCLU,SGRP,RETCOD)
+          CALL HDMESI (IOPT,MESSF,SCLU,SGRP,RETCOD)
         END IF
 C
 C       close any dss files

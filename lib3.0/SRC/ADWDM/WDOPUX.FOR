@@ -32,10 +32,9 @@ C     + + + SAVES + + +
 C
 C     + + + LOCAL VARIABLES + + +
       INTEGER*4 IOS
-      CHARACTER*256 STR
 C
 C     + + + EXTERNALS + + +
-      EXTERNAL   WDBFIN, WDFLCK, WDCREA, LOG_MSG
+      EXTERNAL   WDBFIN, WDFLCK, WDCREA
 C
 C     + + + DATA INITIALIZATIONS + + +
       DATA INITFG/0/
@@ -43,10 +42,6 @@ C
 C     + + + END SPECIFICATIONS + + +
 C
       RETCOD= 0
-C     enable ERROR.FIL logging if available
-      CALL LOG_MSG('WRITE')
-      WRITE(STR,1000) WDMSFL, RONWFG, TRIM(WDNAME)
-      CALL LOG_MSG(STR)
 C     ****** NOTE: THE FOLLOWING OPEN STATEMENTS MAY BE SYSTEM SPECIFIC ******
       IF (RONWFG.EQ.1) THEN
 C       open file as 'read only'
@@ -88,9 +83,5 @@ C       set it to a negative value for consistancy
         IF (RETCOD.EQ.0) RETCOD= -1
  20   CONTINUE
 C
-      WRITE(STR,1001) WDMSFL, RETCOD
-      CALL LOG_MSG(STR)
       RETURN
- 1000 FORMAT('HASS_ENT:F90_WDBOPNR:entr:WDMSFL,RWFLG:',I11,1X,I11,1X,A)
- 1001 FORMAT('HASS_ENT:F90_WDBOPNR:exit:WDMSFL,RETCOD',I11,1X,I11)
       END

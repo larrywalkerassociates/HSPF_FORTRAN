@@ -38,19 +38,19 @@
               OPEN(UNIT=99,FILE=ERROR_FILE_NAME,POSITION='APPEND',SHARE='DENYNONE', &
                    ERR=98,IOSTAT=IO_STATUS,STATUS='NEW')
             END IF
-            WRITE(99,*) TIMEX // 'LOG_MSG:ERROR.FIL OPENED'
+            WRITE(99,'(A)') TIMEX // 'LOG_MSG:ERROR.FIL OPENED'
           ELSE
-            WRITE(99,*) TIMEX // 'LOG_MSG:ERROR.FIL ALREADY OPEN'
+            WRITE(99,'(A)') TIMEX // 'LOG_MSG:ERROR.FIL ALREADY OPEN'
           END IF
         ELSE IF (TRIM(MSG) .EQ. 'CLOSE') THEN
           IF (OPEN_FLAG) THEN
-            WRITE(99,*) TIMEX // 'LOG_MSG:ERROR.FIL CLOSING'
+            WRITE(99,'(A)') TIMEX // 'LOG_MSG:ERROR.FIL CLOSING'
             CLOSE(99)
             OPEN_FLAG = .FALSE.
           END IF
           WRITE_FLAG = .FALSE.
         ELSE IF (OPEN_FLAG .AND. WRITE_FLAG) THEN
-          WRITE(99,*) TIMEX // TRIM(MSG)
+          WRITE(99,'(A)') TIMEX // TRIM(MSG)
           CALL FLUSH(99)
         END IF
 
@@ -96,10 +96,15 @@
           FUN_TRY = FUN_DEF
         END IF
 
-        !WRITE(*,*) 'INQUIRE_NAME:BEG:',FUN_DEF,FUN_TRY,FUN_OPN,FUN_BASE,' ' // TRIM(NAME)
         INQUIRE (FILE=NAME,NUMBER=FUN_OPN,OPENED=OPEN)
+        IF (FUN_OPN .LT. 0) FUN_OPN = 0
+        WRITE(MSG,'("HASS_ENT:INQUIRE_NAME:BEG:",I11,1X,I11,1X,I11,1X,I11,1X,A)') &
+             FUN_DEF,FUN_TRY,FUN_OPN,FUN_BASE,TRIM(NAME)
+        CALL LOG_MSG(MSG)
 
-        !WRITE(*,*) 'INQUIRE_NAME:INX:',FUN_DEF,FUN_TRY,FUN_OPN,OPEN
+        WRITE(MSG,'("HASS_ENT:INQUIRE_NAME:INX:",I11,1X,I11,1X,I11,1X,L1)') &
+             FUN_DEF,FUN_TRY,FUN_OPN,OPEN
+        CALL LOG_MSG(MSG)
         IF (OPEN .EQV. .FALSE.) THEN !unit not open
            IF (FUN_DEF .GE. 0) THEN  !don't use old information from file unit table
              FUN_OPN = 0
@@ -107,21 +112,31 @@
         END IF
 
         DO WHILE (FUN_OPN .EQ. 0) !assign first available unit number to the file
-           !WRITE(*,*) 'INQUIRE_NAME:INF:',FUN_DEF,FUN_TRY,FUN_OPN,OPEN
+           WRITE(MSG,'("HASS_ENT:INQUIRE_NAME:INF:",I11,1X,I11,1X,I11,1X,L1)') &
+                FUN_DEF,FUN_TRY,FUN_OPN,OPEN
+           CALL LOG_MSG(MSG)
            IF (OPEN) THEN  !open, try the next one
-             !WRITE(*,*) 'INQUIRE_NAME:INQ:',FUN_DEF,FUN_TRY,FUN_OPN,OPEN
+             WRITE(MSG,'("HASS_ENT:INQUIRE_NAME:INQ:",I11,1X,I11,1X,I11,1X,L1)') &
+                  FUN_DEF,FUN_TRY,FUN_OPN,OPEN
+             CALL LOG_MSG(MSG)
              FUN_TRY = FUN_TRY+ 1
            ELSE            !this will be it
-             !WRITE(*,*) 'INQUIRE_NAME:DON:',FUN_DEF,FUN_TRY,FUN_OPN,OPEN
+             WRITE(MSG,'("HASS_ENT:INQUIRE_NAME:DON:",I11,1X,I11,1X,I11,1X,L1)') &
+                  FUN_DEF,FUN_TRY,FUN_OPN,OPEN
+             CALL LOG_MSG(MSG)
              FUN_OPN = FUN_TRY 
-             IF (FUN_DEF .LT. 0) THEN !don't reuse unit number 
-               FUN_BASE= FUN_BASE+ 1
-               !WRITE(*,*) 'INQUIRE_NAME:FBS:',FUN_DEF,FUN_OPN,FUN_BASE
-             END IF
+              IF (FUN_DEF .LT. 0) THEN !don't reuse unit number 
+                FUN_BASE= FUN_BASE+ 1
+                WRITE(MSG,'("HASS_ENT:INQUIRE_NAME:FBS:",I11,1X,I11,1X,I11)') &
+                     FUN_DEF,FUN_OPN,FUN_BASE
+                CALL LOG_MSG(MSG)
+              END IF
            END IF
         END DO
 
-        !WRITE(*,*) 'INQUIRE_NAME:ASN:',FUN_DEF,FUN_TRY,FUN_OPN,OPEN
+        WRITE(MSG,'("HASS_ENT:INQUIRE_NAME:ASN:",I11,1X,I11,1X,I11,1X,L1)') &
+             FUN_DEF,FUN_TRY,FUN_OPN,OPEN
+        CALL LOG_MSG(MSG)
         INQUIRE_NAME = FUN_OPN
     END FUNCTION INQUIRE_NAME
 
@@ -197,6 +212,7 @@
         INTEGER                     :: WDMSFL
 
         CHARACTER*256               :: LNAME
+        CHARACTER*256               :: MSG
         INTEGER                     :: RETCOD
 
         LNAME = WDNAME
@@ -233,6 +249,7 @@
         INTEGER                     :: RETCOD
 
         CHARACTER*256               :: LNAME
+        CHARACTER*256               :: MSG
 
         LNAME = WDNAME
         !WDMSFL= INQUIRE_NAME(LNAME,WDMSFL)
@@ -245,7 +262,9 @@
         END IF
         !CALL GET_WDM_FUN(WDMSFL)
 
-        !WRITE(*,*) 'F90_WDBOPNR:entr:WDMSFL,RWFLG:',WDMSFL,RWFLG,' ',TRIM(LNAME)
+        WRITE(MSG,'("HASS_ENT:F90_WDBOPNR:entr:WDMSFL,RWFLG:",I11,1X,I11,1X,A)') &
+             WDMSFL,RWFLG,TRIM(LNAME)
+        CALL LOG_MSG(MSG)
 
         !IF (WDMSFL .LT. 0) THEN
         !  WDMSFL = -WDMSFL
@@ -259,7 +278,13 @@
           END IF
           WDMSFL= 0
         END IF
-        !WRITE(*,*) 'F90_WDBOPNR:exit:WDMSFL,RETCOD',WDMSFL,RETCOD
+        WRITE(MSG,'("HASS_ENT:F90_WDBOPNR:exit:WDMSFL,RETCOD",I11,1X,I11)') &
+             WDMSFL,RETCOD
+        CALL LOG_MSG(MSG)
+        IF (RETCOD .EQ. 0) THEN
+          WRITE(MSG,'("atcWdmHandle:New:",I0,":",I0,":",A)') WDMSFL,RETCOD,TRIM(LNAME)
+          CALL LOG_MSG(MSG)
+        END IF
 
     END SUBROUTINE F90_WDBOPNR
 
@@ -299,24 +324,30 @@
         INTEGER             :: RETCOD
  
         CHARACTER*200 :: FNAM
+        CHARACTER*256 :: MSG
         INTEGER       :: FUN
         LOGICAL       :: OPEN
             
-        !WRITE(*,*) 'F90_WDFLCL:entry:WDMSFL:',WDMSFL
+        WRITE(MSG,*) 'HASS_ENT:F90_WDFLCL:entry:WDMSFL:',WDMSFL
+        CALL LOG_MSG(MSG)
 
         INQUIRE(UNIT=WDMSFL,OPENED=OPEN,NAME=FNAM)
 
         IF (OPEN) THEN
           CALL WDFLCL(WDMSFL,RETCOD)
-          !WRITE(*,*) 'F90_WDFLCL:close:WDMSFL:RETCOD:', WDMSFL,RETCOD
+          WRITE(MSG,*) 'HASS_ENT:F90_WDFLCL:close:WDMSFL:RETCOD:', WDMSFL,RETCOD
+          CALL LOG_MSG(MSG)
 
           INQUIRE(UNIT=WDMSFL,OPENED=OPEN)
-          !WRITE(*,*) "F90_WDFLCL:opned:WDMSFL:", WDMSFL,OPEN
+          WRITE(MSG,*) 'HASS_ENT:F90_WDFLCL:opned:WDMSFL:', WDMSFL,OPEN
+          CALL LOG_MSG(MSG)
           INQUIRE(FILE=FNAM,NUMBER=FUN,OPENED=OPEN)
-          !WRITE(*,*) "F90_WDFLCL:final:WDMSFL:", FUN,OPEN,' ',TRIM(FNAM)
+          WRITE(MSG,*) 'HASS_ENT:F90_WDFLCL:final:WDMSFL:', FUN,OPEN,' ',TRIM(FNAM)
+          CALL LOG_MSG(MSG)
         ELSE
           !not open, cant close it
-          WRITE(*,*) 'F90_WDFLCL:not open'
+          WRITE(MSG,*) 'HASS_ENT:F90_WDFLCL:not open'
+          CALL LOG_MSG(MSG)
           RETCOD = -255
         END IF
     END FUNCTION F90_WDFLCL
@@ -336,8 +367,9 @@
 
         WRITE(LNAM,*) NAM
         INQUIRE (FILE=LNAM,NUMBER=FUN,OPENED=OPEN)
-
-        !WRITE(*,*) 'F90_INQNAM:',FUN,OPEN,' ',TRIM(LNAM)
+        IF (.NOT. OPEN) FUN = 0
+        WRITE(MSG,'("HASS_ENT:F90_INQNAM:",I11,1X,L1,1X,A)') FUN,OPEN,TRIM(LNAM)
+        CALL LOG_MSG(MSG)
 
         IF (OPEN) THEN     
           F90_INQNAM = FUN

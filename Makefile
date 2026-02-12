@@ -11,6 +11,7 @@ BIN := $(BUILD)/bin
 SRCROOT := $(ROOT)/lib3.0/SRC
 VFPROJ := $(ROOT)/lib3.0/IntelLibs
 DRVPROJ := $(ROOT)/f90apps/Hspf12.5Intel/Hspf12.5Intel.vfproj
+HASS_ENT_SRC := $(ROOT)/f90apps/WdmEnt/src/WdmEnt.f90
 
 FFLAGS ?= -assume byterecl -extend-source -O0
 
@@ -25,7 +26,7 @@ WDM_SRCS := $(call vfproj_sources,$(VFPROJ)/wdm/wdm.vfproj)
 HSPF125_SRCS := $(call vfproj_sources,$(VFPROJ)/hspf125/hspf125.vfproj)
 HEC_SRCS := $(call vfproj_sources,$(VFPROJ)/hec/hec.vfproj)
 HSPDSS_SRCS := $(call vfproj_sources,$(VFPROJ)/hspdss/hspdss.vfproj)
-DRIVER_SRCS := $(call vfproj_sources,$(DRVPROJ))
+DRIVER_SRCS := $(call vfproj_sources,$(DRVPROJ)) $(HASS_ENT_SRC)
 
 UTIL_OBJS := $(addsuffix .o,$(addprefix $(OBJ)/util/,$(notdir $(basename $(UTIL_SRCS)))))
 ADWDM_OBJS := $(addsuffix .o,$(addprefix $(OBJ)/adwdm/,$(notdir $(basename $(ADWDM_SRCS)))))

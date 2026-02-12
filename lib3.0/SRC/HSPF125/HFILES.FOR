@@ -33,11 +33,11 @@ C     + + + INTRINSICS + + +
       INTRINSIC IABS
 C
 C     + + + FUNCTIONS + + +
-      INTEGER   CHRDIG
+      INTEGER   CHRDIG,F90_INQNAM
 C
 C     + + + EXTERNALS + + +
-      EXTERNAL  FILOPN,RDFLBK,WDBOPN,OMSINI,ZSET,ATTACH,ATTEND,ZOPEN,
-     #          ZIPI,XGTRCL,XPLFRM,CHRDIG,BINIT
+      EXTERNAL  FILOPN,RDFLBK,F90_WDBOPNR,OMSINI,ZSET,ATTACH,ATTEND,
+     #          ZOPEN,ZIPI,XGTRCL,XPLFRM,CHRDIG,BINIT
 C
 C     + + + DATA INITIALIZATIONS + + +
       DATA CNOP/'NOP   '/,CMESSU/'MESSU '/,CTSS/'TSS   '/,
@@ -130,8 +130,9 @@ C
             IF (ISTAT .LE. 0) THEN
 C             try to open file
               FILES(10+I)= FUNIT(FILX)
-              CALL WDBOPN (FILES(10+I),FILNAM,I0,
-     O                     RET)
+              RET = F90_INQNAM(FILNAM)
+              CALL F90_WDBOPNR (I0,FILNAM,FILES(10+I),
+     O                          RET)
             END IF
           END IF
           RETCOD= RETCOD+ IABS(RET)

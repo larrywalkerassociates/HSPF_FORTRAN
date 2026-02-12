@@ -268,8 +268,10 @@ C     + + + COMMON BLOCKS + + +
       INCLUDE 'cfbuff.inc'
 C
 C     + + + LOCAL VARIABLES + + +
-      INTEGER   I, J
-      CHARACTER*256 STR
+      INTEGER   I, J, FUN, IOS
+      CHARACTER*256 MSG
+      CHARACTER*200 FNAM
+      LOGICAL   OPEN
 C
 C     + + + EXTERNALS + +
       EXTERNAL   WDFLNU, LOG_MSG
@@ -279,8 +281,9 @@ C
       RETCOD= 0
 C     enable ERROR.FIL logging if available
       CALL LOG_MSG('WRITE')
-      WRITE(STR,2000) WDMSFL
-      CALL LOG_MSG(STR)
+      INQUIRE(UNIT=WDMSFL,OPENED=OPEN,NAME=FNAM)
+      WRITE(MSG,2000) WDMSFL
+      CALL LOG_MSG(MSG)
 C
 C     WRITE(99,*,ERR=10) 'WDFLCL:entry',WDMSFL,
 C    #            ' count',WDMCNT,
@@ -324,17 +327,30 @@ C         force exit from loop
         END IF
       END DO
 C
-      WRITE(STR,2001) WDMSFL, RETCOD
-      CALL LOG_MSG(STR)
 C
 C     WRITE(99,*,ERR=40) 'WDFLCL:exit:',WDMSFL,
 C    #            ' count',WDMCNT,
 C    #            ' open:',(WDMOPN(I),I=1,WDMCNT)
 C40   CONTINUE
 C
+      WRITE(MSG,2001) WDMSFL, RETCOD
+      CALL LOG_MSG(MSG)
+      INQUIRE(UNIT=WDMSFL,OPENED=OPEN)
+      WRITE(MSG,2002) WDMSFL, OPEN
+      CALL LOG_MSG(MSG)
+      INQUIRE(FILE=FNAM,NUMBER=FUN,OPENED=OPEN,IOSTAT=IOS)
+      IF (IOS .NE. 0) THEN
+        FUN = 0
+        OPEN = .FALSE.
+      END IF
+      WRITE(MSG,2003) FUN, OPEN, FNAM
+      CALL LOG_MSG(MSG)
+C
       RETURN
  2000 FORMAT('HASS_ENT:F90_WDFLCL:entry:WDMSFL:',I11)
  2001 FORMAT('HASS_ENT:F90_WDFLCL:close:WDMSFL:RETCOD:',I11,1X,I11)
+ 2002 FORMAT('HASS_ENT:F90_WDFLCL:opned:WDMSFL:',I11,1X,L1)
+ 2003 FORMAT('HASS_ENT:F90_WDFLCL:final:WDMSFL:',I11,1X,L1,1X,A)
       END
 C
 C
