@@ -21,6 +21,18 @@ build_ifx_byterecl_wdopux_hspfext/{obj,lib,bin}.
 - build_ifx_byterecl_wdopux_hspfext/bin/hspf12_5_static_full
   - Fully static (ldd reports "not a dynamic executable").
 
+## Makefile rebuild
+From the repository root:
+```
+source /opt/intel/oneapi/setvars.sh
+make selfcontained
+```
+
+To build the Intel-runtime static variant instead:
+```
+make static-intel
+```
+
 ## Run example
 ```
 source /opt/intel/oneapi/setvars.sh
