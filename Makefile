@@ -13,6 +13,12 @@ VFPROJ := $(ROOT)/lib3.0/IntelLibs
 DRVPROJ := $(ROOT)/f90apps/Hspf12.5Intel/Hspf12.5Intel.vfproj
 
 FFLAGS ?= -assume byterecl -extend-source -O0
+WIN_FPFLAGS ?=
+WIN_CFLAGS ?= /nologo /c
+WIN_LINK_FLAGS ?= /nologo
+WIN_BUILD_CFG ?= $(ROOT)/build_ifx/Hspf12.5/x64/Release
+WIN_ROOT := $(subst /,\,$(ROOT))
+WIN_BUILD_CFG_WIN := $(subst /,\,$(WIN_BUILD_CFG))
 
 define vfproj_sources
 $(shell $(PYTHON) $(ROOT)/tools/vfproj_sources.py $(1))
@@ -35,21 +41,29 @@ HSPDSS_OBJS := $(addsuffix .o,$(addprefix $(OBJ)/hspdss/,$(notdir $(basename $(H
 DRIVER_OBJS := $(addsuffix .o,$(addprefix $(OBJ)/driver/,$(notdir $(basename $(DRIVER_SRCS)))))
 
 INCLUDES_util := -I$(SRCROOT)/UTIL
-INCLUDES_wdm := -I$(SRCROOT)/WDM -I$(SRCROOT)/UTIL
+INCLUDES_wdm := -I$(SRCROOT)/WDM -I$(SRCROOT)/UTIL -I$(SRCROOT)/ADWDM
 INCLUDES_adwdm := -I$(SRCROOT)/ADWDM -I$(SRCROOT)/UTIL -I$(SRCROOT)/WDM
 INCLUDES_hspf125 := -I$(SRCROOT)/HSPF125 -I$(SRCROOT)/UTIL -I$(SRCROOT)/WDM -I$(SRCROOT)/ADWDM -I$(SRCROOT)/HEC -I$(SRCROOT)/HSPDSS
 INCLUDES_hec := -I$(SRCROOT)/HEC -I$(SRCROOT)/UTIL
-INCLUDES_hspdss := -I$(SRCROOT)/HSPDSS -I$(SRCROOT)/UTIL
+INCLUDES_hspdss := -I$(SRCROOT)/HSPDSS -I$(SRCROOT)/UTIL -I$(SRCROOT)/HSPF125
 INCLUDES_driver := -I$(ROOT)/f90apps/Hspf12.5Intel/src -I$(SRCROOT)/HSPF125 -I$(SRCROOT)/UTIL -I$(SRCROOT)/WDM -I$(SRCROOT)/ADWDM -I$(SRCROOT)/HEC -I$(SRCROOT)/HSPDSS
 
 LIBS := $(LIB)/libhspf125.a $(LIB)/libwdm.a $(LIB)/libadwdm.a $(LIB)/libutil.a $(LIB)/libhec.a $(LIB)/libhspdss.a
 
-.PHONY: all selfcontained static-intel clean
+.PHONY: all selfcontained static-intel windows-release clean
 all: selfcontained
 
 selfcontained: $(BIN)/hspf12_5_static_full
 
 static-intel: $(BIN)/hspf12_5_static
+
+# Windows build (requires GNU make + VS Build Tools + Intel oneAPI ifx).
+# Keep WIN_FPFLAGS empty to use the current default ifx behavior.
+# Optional precision override examples:
+#   make windows-release WIN_FPFLAGS=/fp:strict
+#   make windows-release WIN_FPFLAGS=/fp:precise
+windows-release:
+	cmd /c "cd /d \"$(WIN_ROOT)\" && call \"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat\" -arch=x64 -host_arch=x64 >nul 2>&1 && call \"C:\Program Files (x86)\Intel\oneAPI\setvars.bat\" >nul 2>&1 && cd /d \"$(WIN_BUILD_CFG_WIN)\obj\util\" && ifx $(WIN_CFLAGS) $(WIN_FPFLAGS) /I\"$(WIN_ROOT)\lib3.0\SRC\UTIL\" @sources.rsp && lib /nologo /OUT:\"$(WIN_BUILD_CFG_WIN)\lib\util.lib\" @objs.rsp && cd /d \"$(WIN_BUILD_CFG_WIN)\obj\adwdm\" && ifx $(WIN_CFLAGS) $(WIN_FPFLAGS) /I\"$(WIN_ROOT)\lib3.0\SRC\ADWDM\" /I\"$(WIN_ROOT)\lib3.0\SRC\UTIL\" /I\"$(WIN_ROOT)\lib3.0\SRC\WDM\" @sources.rsp && lib /nologo /OUT:\"$(WIN_BUILD_CFG_WIN)\lib\adwdm.lib\" @objs.rsp && cd /d \"$(WIN_BUILD_CFG_WIN)\obj\wdm\" && ifx $(WIN_CFLAGS) $(WIN_FPFLAGS) /I\"$(WIN_ROOT)\lib3.0\SRC\WDM\" /I\"$(WIN_ROOT)\lib3.0\SRC\UTIL\" /I\"$(WIN_ROOT)\lib3.0\SRC\ADWDM\" @sources.rsp && lib /nologo /OUT:\"$(WIN_BUILD_CFG_WIN)\lib\wdm.lib\" @objs.rsp && cd /d \"$(WIN_BUILD_CFG_WIN)\obj\hspf125\" && ifx $(WIN_CFLAGS) $(WIN_FPFLAGS) /I\"$(WIN_ROOT)\lib3.0\SRC\HSPF125\" /I\"$(WIN_ROOT)\lib3.0\SRC\UTIL\" /I\"$(WIN_ROOT)\lib3.0\SRC\WDM\" /I\"$(WIN_ROOT)\lib3.0\SRC\ADWDM\" /I\"$(WIN_ROOT)\lib3.0\SRC\HEC\" /I\"$(WIN_ROOT)\lib3.0\SRC\HSPDSS\" @sources.rsp && lib /nologo /OUT:\"$(WIN_BUILD_CFG_WIN)\lib\hspf125.lib\" @objs.rsp && cd /d \"$(WIN_BUILD_CFG_WIN)\obj\hec\" && ifx $(WIN_CFLAGS) $(WIN_FPFLAGS) /I\"$(WIN_ROOT)\lib3.0\SRC\HEC\" /I\"$(WIN_ROOT)\lib3.0\SRC\UTIL\" @sources.rsp && lib /nologo /OUT:\"$(WIN_BUILD_CFG_WIN)\lib\hec.lib\" @objs.rsp && cd /d \"$(WIN_BUILD_CFG_WIN)\obj\hspdss\" && ifx $(WIN_CFLAGS) $(WIN_FPFLAGS) /I\"$(WIN_ROOT)\lib3.0\SRC\HSPDSS\" /I\"$(WIN_ROOT)\lib3.0\SRC\UTIL\" /I\"$(WIN_ROOT)\lib3.0\SRC\HSPF125\" @sources.rsp && lib /nologo /OUT:\"$(WIN_BUILD_CFG_WIN)\lib\hspdss.lib\" @objs.rsp && cd /d \"$(WIN_BUILD_CFG_WIN)\obj\driver\" && ifx $(WIN_CFLAGS) $(WIN_FPFLAGS) /I\"$(WIN_ROOT)\f90apps\Hspf12.5Intel\src\" /I\"$(WIN_ROOT)\lib3.0\SRC\HSPF125\" /I\"$(WIN_ROOT)\lib3.0\SRC\UTIL\" /I\"$(WIN_ROOT)\lib3.0\SRC\WDM\" /I\"$(WIN_ROOT)\lib3.0\SRC\ADWDM\" /I\"$(WIN_ROOT)\lib3.0\SRC\HEC\" /I\"$(WIN_ROOT)\lib3.0\SRC\HSPDSS\" @sources.rsp && cd /d \"$(WIN_BUILD_CFG_WIN)\bin\" && ifx $(WIN_LINK_FLAGS) /exe:hspf12.5_ifx.exe @link.rsp"
 
 $(BIN)/hspf12_5_static_full: $(DRIVER_OBJS) $(LIBS)
 	@mkdir -p $(BIN)
